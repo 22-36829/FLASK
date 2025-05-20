@@ -18,10 +18,6 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     }
 }
 
-# Push an application context
-ctx = app.app_context()
-ctx.push()
-
 # Initialize SocketIO with the correct configuration for production
 socketio = SocketIO(
     app,
@@ -39,7 +35,6 @@ socketio = SocketIO(
 @socketio.on_error_default
 def default_error_handler(e):
     print(f'SocketIO Error: {str(e)}')
-    # Close any open database sessions
     try:
         db.session.remove()
     except:
@@ -55,21 +50,14 @@ if __name__ == '__main__':
 else:
     # This is for Gunicorn/production
     port = int(os.environ.get('PORT', 10000))
-    
-    # Create a WSGI middleware that handles database session cleanup
-    def cleanup_db_session(wsgi_app):
-        def middleware(environ, start_response):
-            try:
-                return wsgi_app(environ, start_response)
-            finally:
-                try:
-                    db.session.remove()
-                except:
-                    pass
-        return middleware
 
-    # The Flask app is our WSGI application
-    application = app
+    # Create a safe database session cleanup handler
+    def cleanup_db_session(response_or_exc):
+        try:
+            db.session.remove()
+        except:
+            pass
+        return response_or_exc
 
-    # Wrap it with the cleanup middleware
-    application = cleanup_db_session(application) 
+    # Register the cleanup handler
+    app.teardown_appcontext(cleanup_db_session) 

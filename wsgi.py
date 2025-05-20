@@ -2,8 +2,19 @@
 WSGI entry point for the application.
 This file ensures eventlet monkey patching happens before any other imports.
 """
+
+# Monkey patch before ANY other imports
 import eventlet
-eventlet.monkey_patch(all=True, thread=True, select=True)
+eventlet.monkey_patch(
+    os=True,
+    socket=True,
+    dns=True,
+    time=True,
+    select=True,
+    thread=True,
+    psycopg=True,
+    all=False
+)
 
 # Configure eventlet
 import eventlet.debug
@@ -11,7 +22,7 @@ eventlet.debug.hub_prevent_multiple_readers(False)
 eventlet.debug.hub_exceptions(True)
 
 # Now we can safely import the rest
-from main import application, socketio
+from main import app, socketio
 
-# The WSGI application is already properly configured in main.py
-app = application 
+# Export the WSGI application
+application = socketio.middleware(app) 

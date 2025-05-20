@@ -3,7 +3,7 @@ services:
     name: flask-pharma-dashboard
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python -m gunicorn.app.wsgiapp --worker-class eventlet -w 1 --timeout 120 --keep-alive 65 --log-level debug --bind 0.0.0.0:$PORT 'wsgi:app'
+    startCommand: gunicorn wsgi:application --worker-class eventlet -w 1 --timeout 120 --keep-alive 65 --log-level debug --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
