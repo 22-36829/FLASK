@@ -26,10 +26,16 @@ socketio = SocketIO(
     logger=True,
     engineio_logger=True,
     manage_session=False,
-    ping_timeout=30,
-    ping_interval=15,
+    ping_timeout=60,
+    ping_interval=25,
     max_http_buffer_size=1024 * 1024,
-    async_handlers=True
+    async_handlers=True,
+    message_queue=None,  # Use in-memory queue
+    always_connect=True,
+    reconnection=True,
+    reconnection_attempts=5,
+    reconnection_delay=1000,
+    reconnection_delay_max=5000
 )
 
 @socketio.on_error_default
