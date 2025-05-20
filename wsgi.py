@@ -13,5 +13,5 @@ eventlet.debug.hub_exceptions(True)
 # Now we can safely import the rest
 from main import application, socketio
 
-# Export the WSGI application
+# The WSGI application is already properly configured in main.py
 app = application 

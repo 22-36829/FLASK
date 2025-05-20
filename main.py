@@ -55,18 +55,21 @@ if __name__ == '__main__':
 else:
     # This is for Gunicorn/production
     port = int(os.environ.get('PORT', 10000))
-    # Wrap the application with proper middleware
-    application = socketio.middleware(app)
-
-    # Clean up function for database sessions
-    def cleanup_db_session(environ, start_response):
-        try:
-            return application(environ, start_response)
-        finally:
+    
+    # Create a WSGI middleware that handles database session cleanup
+    def cleanup_db_session(wsgi_app):
+        def middleware(environ, start_response):
             try:
-                db.session.remove()
-            except:
-                pass
+                return wsgi_app(environ, start_response)
+            finally:
+                try:
+                    db.session.remove()
+                except:
+                    pass
+        return middleware
 
-    # Use the cleanup wrapper as the WSGI application
-    application = cleanup_db_session 
+    # Create the proper WSGI application with SocketIO
+    application = socketio.wsgi_app
+    
+    # Wrap the application with the cleanup middleware
+    application = cleanup_db_session(application) 
