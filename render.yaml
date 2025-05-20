@@ -3,12 +3,12 @@ services:
     name: flask-pharma-dashboard
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --worker-class eventlet -w 1 --timeout 120 --keep-alive 65 --log-level debug 'main:application'
+    startCommand: gunicorn --worker-class eventlet -w 1 --timeout 120 --keep-alive 65 --log-level debug --preload 'wsgi:app'
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: FLASK_APP
-        value: main.py
+        value: wsgi.py
       - key: FLASK_ENV
         value: production
       - key: FLASK_DEBUG
@@ -28,6 +28,8 @@ services:
       - key: GUNICORN_KEEP_ALIVE
         value: "65"
       - key: PYTHONUNBUFFERED
+        value: "true"
+      - key: EVENTLET_DEBUG
         value: "true"
       - key: DATABASE_URL
         fromDatabase:

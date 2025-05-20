@@ -1,16 +1,7 @@
-import eventlet
-eventlet.monkey_patch(all=True)  # Patch all possible modules
-
 import os
 from app import create_app, db
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
-from eventlet import wsgi
-import eventlet.debug
-
-# Enable debug for eventlet
-eventlet.debug.hub_prevent_multiple_readers(False)
-eventlet.debug.hub_exceptions(True)
 
 # Create the Flask application instance
 app = create_app()
