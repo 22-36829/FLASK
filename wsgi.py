@@ -8,11 +8,9 @@ import eventlet
 eventlet.monkey_patch(
     os=True,
     socket=True,
-    dns=True,
     time=True,
     select=True,
     thread=True,
-    psycopg=True,
     all=False
 )
 

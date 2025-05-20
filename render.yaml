@@ -5,12 +5,12 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       flask db upgrade
-    startCommand: gunicorn wsgi:application --worker-class eventlet -w 1 --timeout 120 --keep-alive 65 --log-level debug --bind 0.0.0.0:$PORT
+    startCommand: gunicorn "wsgi:application" --worker-class eventlet -w 1 --timeout 120 --keep-alive 65 --log-level debug --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: FLASK_APP
-        value: main.py
+        value: wsgi.py
       - key: FLASK_ENV
         value: production
       - key: FLASK_DEBUG
