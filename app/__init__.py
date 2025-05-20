@@ -59,14 +59,23 @@ bcrypt = Bcrypt()
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
+    
+    # Default configuration
     app.config.from_mapping(
-        SECRET_KEY='dev',
-        SQLALCHEMY_DATABASE_URI='sqlite:///' + os.path.join(app.instance_path, 'flask_dashboard.sqlite'),
+        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=os.path.join(os.path.dirname(app.instance_path), 'uploads'),
         MODELS_FOLDER=os.path.join(os.path.dirname(app.instance_path), 'FLASK MODELS', 'saved_models'),
         MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max file size
     )
+
+    # Configure database URL
+    if os.environ.get('FLASK_ENV') == 'production':
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+        if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+            app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.instance_path, 'flask_dashboard.sqlite')
 
     if test_config is None:
         # load the instance config, if it exists, when not testing

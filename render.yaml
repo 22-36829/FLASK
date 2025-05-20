@@ -17,6 +17,8 @@ services:
         value: "0"
       - key: PORT
         value: "10000"
+      - key: SECRET_KEY
+        generateValue: true
       - key: SQLALCHEMY_POOL_SIZE
         value: "20"
       - key: SQLALCHEMY_MAX_OVERFLOW
@@ -55,4 +57,5 @@ services:
   - type: postgres
     name: flask-dashboard-db
     ipAllowList: []
-    plan: free 
+    plan: free
+    postgresMajorVersion: 15 
