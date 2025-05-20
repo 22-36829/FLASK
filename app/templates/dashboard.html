@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Pharma Analytics{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .dashboard-container {
+        padding: 20px;
+    }
+    
+    .chart-card {
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-card .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chart-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chart-actions button {
+        padding: 4px 8px;
+        font-size: 14px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .export-btn {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .refresh-btn {
+        background-color: #17a2b8;
+        color: white;
+    }
+    
+    .date-range-picker {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .date-range-picker input {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .filters {
+        margin-bottom: 20px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .auto-refresh {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .last-updated {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .chart-container {
+        height: 400px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Filters</h5>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="auto-refresh-toggle">
+                    <label class="form-check-label" for="auto-refresh-toggle">Auto-refresh</label>
+                    <select class="form-select form-select-sm d-inline-block ms-2" style="width: 80px;" id="refresh-interval">
+                        <option value="30">30s</option>
+                        <option value="60">1m</option>
+                        <option value="300">5m</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('dashboard') }}" method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="date-range" class="form-label">Date Range</label>
+                        <select class="form-select" id="date-range" name="date_range">
+                            <option value="Last 7 days" {% if selected_date_range == 'Last 7 days' %}selected{% endif %}>Last 7 days</option>
+                            <option value="Last 30 days" {% if selected_date_range == 'Last 30 days' %}selected{% endif %}>Last 30 days</option>
+                            <option value="Last 90 days" {% if selected_date_range == 'Last 90 days' %}selected{% endif %}>Last 90 days</option>
+                            <option value="Last 365 days" {% if selected_date_range == 'Last 365 days' %}selected{% endif %}>Last 365 days</option>
+                            <option value="custom" {% if selected_date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="category" class="form-label">Category</label>
+                        <select class="form-select" id="category" name="category">
+                            {% for category in categories %}
+                            <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="product-filter" class="form-label">Product</label>
+                        <select class="form-select" id="product-filter" name="product_id">
+                            <option value="">All Products</option>
+                            {% for product in products %}
+                            <option value="{{ product.id }}" {% if selected_product == product.id %}selected{% endif %}>{{ product.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-1"></i>Apply Filters
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-undo me-1"></i>Reset
+                        </a>
+                        <div class="btn-group ms-2">
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('export_data') }}?{{ request.query_string.decode() }}">Export Data (CSV)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('export_chart', chart_type='revenue') }}?format=png">Revenue Chart (PNG)</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('export_chart', chart_type='inventory') }}?format=png">Inventory Chart (PNG)</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('export_chart', chart_type='reservations') }}?format=png">Reservations Chart (PNG)</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('export_chart', chart_type='revenue') }}?format=html">Revenue Chart (HTML)</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('export_chart', chart_type='inventory') }}?format=html">Inventory Chart (HTML)</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('export_chart', chart_type='reservations') }}?format=html">Reservations Chart (HTML)</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Revenue Over Time</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Drill down to see daily data">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <a href="{{ url_for('export_chart', chart_type='revenue') }}?format=png" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export as PNG">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="revenue-chart">
+                    {{ charts.revenue | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Inventory Status</h5>
+                <a href="{{ url_for('export_chart', chart_type='inventory') }}?format=png" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export as PNG">
+                    <i class="fas fa-download"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <div id="inventory-chart">
+                    {{ charts.inventory | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Reservations</h5>
+                <a href="{{ url_for('export_chart', chart_type='reservations') }}?format=png" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export as PNG">
+                    <i class="fas fa-download"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <div id="reservations-chart">
+                    {{ charts.reservations | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Product Comparison</h5>
+                <a href="{{ url_for('export_chart', chart_type='comparison') }}?format=png" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export as PNG">
+                    <i class="fas fa-download"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <div id="comparison-chart">
+                    {{ charts.comparison | safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Custom date range picker
+        const dateRangeSelect = document.getElementById('date-range');
+        const customDateContainer = document.createElement('div');
+        customDateContainer.classList.add('mt-2');
+        customDateContainer.style.display = 'none';
+        customDateContainer.innerHTML = `
+            <input type="text" class="form-control datepicker" name="custom_date_range" placeholder="Select date range" value="{{ custom_date_range }}">
+        `;
+        
+        dateRangeSelect.parentNode.appendChild(customDateContainer);
+        
+        // Initialize Flatpickr with specific options
+        const flatpickrInstance = flatpickr(".datepicker", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            defaultDate: "{{ custom_date_range }}" || null,
+            onChange: function(selectedDates, dateStr) {
+                if (selectedDates.length === 2) {
+                    // Auto-submit form when date range is selected
+                    dateRangeSelect.value = 'custom';
+                    dateRangeSelect.closest('form').submit();
+                }
+            }
+        });
+        
+        dateRangeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateContainer.style.display = 'block';
+                flatpickrInstance.open();
+            } else {
+                customDateContainer.style.display = 'none';
+                this.closest('form').submit();
+            }
+        });
+        
+        // Show custom date container if custom is selected
+        if (dateRangeSelect.value === 'custom') {
+            customDateContainer.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %} 

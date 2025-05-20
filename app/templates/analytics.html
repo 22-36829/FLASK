@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Pharma Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .analytics-container {
+        padding: 20px;
+    }
+    
+    .analytics-card {
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .analytics-card .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .analytics-card .card-body {
+        padding: 20px;
+    }
+    
+    .chart-container {
+        height: 400px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid analytics-container">
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" name="date_range">
+                                <option value="Last 7 days" {% if selected_date_range == 'Last 7 days' %}selected{% endif %}>Last 7 days</option>
+                                <option value="Last 30 days" {% if selected_date_range == 'Last 30 days' %}selected{% endif %}>Last 30 days</option>
+                                <option value="Last 90 days" {% if selected_date_range == 'Last 90 days' %}selected{% endif %}>Last 90 days</option>
+                                <option value="Last 365 days" {% if selected_date_range == 'Last 365 days' %}selected{% endif %}>Last 365 days</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category">
+                                <option value="All Categories" {% if selected_category == 'All Categories' %}selected{% endif %}>All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Product</label>
+                            <select class="form-select" name="product_id">
+                                <option value="">All Products</option>
+                                {% for product in products %}
+                                <option value="{{ product.id }}" {% if selected_product == product.id %}selected{% endif %}>{{ product.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% else %}
+    <!-- Time Series Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Time Series Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading mb-2">About Time Series Analysis</h6>
+                        <p class="mb-0">These forecasts use historical data to predict future trends. The shaded areas represent prediction confidence intervals. Wider intervals indicate higher uncertainty in the forecast.</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Revenue Forecast</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ revenue_forecast_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Metrics:</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">MAPE:</small>
+                                                <br>
+                                                <strong>{{ revenue_metrics.mape|default('N/A', true) }}%</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">R² Score:</small>
+                                                <br>
+                                                <strong>{{ revenue_metrics.r2|default('N/A', true) }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Inventory Forecast</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ inventory_forecast_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Metrics:</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">MAE:</small>
+                                                <br>
+                                                <strong>{{ inventory_metrics.mae|default('N/A', true) }}</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Accuracy:</small>
+                                                <br>
+                                                <strong>{{ inventory_metrics.accuracy|default('N/A', true) }}%</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Reservations Forecast</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ reservations_forecast_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <h6>Metrics:</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">RMSE:</small>
+                                                <br>
+                                                <strong>{{ reservation_metrics.rmse|default('N/A', true) }}</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Precision:</small>
+                                                <br>
+                                                <strong>{{ reservation_metrics.precision|default('N/A', true) }}%</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Product Performance Comparison</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ product_comparison_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <p class="text-muted mb-0">
+                                            <small>Shows relative performance across different products based on sales volume, revenue, and inventory turnover.</small>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Analysis -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card analytics-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Trend Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading mb-2">About Trend Analysis</h6>
+                        <p class="mb-0">These visualizations show historical patterns and correlations in your data. Use them to identify seasonality, cyclical patterns, and potential areas for optimization.</p>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Sales Trends</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ sales_trend_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="row">
+                                            <div class="col-4">
+                                                <small class="text-muted">Growth Rate:</small>
+                                                <br>
+                                                <strong>{{ sales_metrics.growth_rate|default('N/A', true) }}%</strong>
+                                            </div>
+                                            <div class="col-4">
+                                                <small class="text-muted">Peak Month:</small>
+                                                <br>
+                                                <strong>{{ sales_metrics.peak_month|default('N/A', true) }}</strong>
+                                            </div>
+                                            <div class="col-4">
+                                                <small class="text-muted">Seasonality:</small>
+                                                <br>
+                                                <strong>{{ sales_metrics.seasonality|default('N/A', true) }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Inventory Movement</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ inventory_movement_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Turnover Rate:</small>
+                                                <br>
+                                                <strong>{{ inventory_metrics.turnover_rate|default('N/A', true) }}</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Stock Efficiency:</small>
+                                                <br>
+                                                <strong>{{ inventory_metrics.efficiency|default('N/A', true) }}%</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Price Trends</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ price_trend_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Price Volatility:</small>
+                                                <br>
+                                                <strong>{{ price_metrics.volatility|default('N/A', true) }}%</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Margin Trend:</small>
+                                                <br>
+                                                <strong>{{ price_metrics.margin_trend|default('N/A', true) }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Market Segmentation</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        {{ segmentation_chart | safe }}
+                                    </div>
+                                    <div class="mt-3">
+                                        <p class="text-muted mb-0">
+                                            <small>Visualizes product performance across different market segments and customer groups.</small>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date picker
+        flatpickr("#custom-date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d"
+        });
+
+        // Function to resize charts when window is resized
+        function resizeCharts() {
+            var charts = document.querySelectorAll('[id$="-chart"]');
+            charts.forEach(function(chart) {
+                if (chart.data) {
+                    Plotly.Plots.resize(chart);
+                }
+            });
+        }
+
+        // Resize charts on window resize
+        window.addEventListener('resize', resizeCharts);
+
+        // Initial resize
+        resizeCharts();
+    });
+</script>
+{% endblock %}

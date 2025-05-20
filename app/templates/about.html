@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}About - Pharma Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">About the Pharmaceutical Sales & Inventory Dashboard</h5>
+            </div>
+            <div class="card-body">
+                <h4>Overview</h4>
+                <p>
+                    This dashboard provides comprehensive analytics and forecasting capabilities for pharmaceutical sales and inventory management. 
+                    It leverages advanced machine learning models to predict future trends and help make data-driven decisions.
+                </p>
+                
+                <h4>Features</h4>
+                <ul>
+                    <li><strong>Interactive Visualizations</strong> - Explore data through interactive charts with drill-down capabilities</li>
+                    <li><strong>Advanced Analytics</strong> - Access product segmentation, sales trend analysis, inventory optimization, and more</li>
+                    <li><strong>Machine Learning Forecasts</strong> - Utilize trained models for revenue, inventory, and reservation predictions</li>
+                    <li><strong>Real-time Updates</strong> - Get live updates through WebSocket connections</li>
+                    <li><strong>Custom Date Filtering</strong> - Analyze data across flexible time periods</li>
+                    <li><strong>Export Capabilities</strong> - Export charts and data in multiple formats (PNG, HTML, CSV)</li>
+                </ul>
+                
+                <h4>Models</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Model Type</th>
+                                <th>Purpose</th>
+                                <th>Algorithm</th>
+                                <th>Typical Accuracy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Revenue Forecasting</td>
+                                <td>Predict future revenue trends</td>
+                                <td>ARIMA (AutoRegressive Integrated Moving Average)</td>
+                                <td>92-95%</td>
+                            </tr>
+                            <tr>
+                                <td>Inventory Prediction</td>
+                                <td>Predict days until stock depletion</td>
+                                <td>XGBoost (Gradient Boosting)</td>
+                                <td>90-93%</td>
+                            </tr>
+                            <tr>
+                                <td>Reservation Forecasting</td>
+                                <td>Predict future product reservations</td>
+                                <td>Prophet (Facebook's time series forecasting)</td>
+                                <td>91-94%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h4>Technology Stack</h4>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5>Backend</h5>
+                        <ul>
+                            <li>Flask - Web framework</li>
+                            <li>SQLAlchemy - ORM for database operations</li>
+                            <li>Flask-SocketIO - Real-time WebSocket communication</li>
+                            <li>Pandas & NumPy - Data processing</li>
+                            <li>Scikit-learn - Machine learning utilities</li>
+                            <li>ARIMA, XGBoost, Prophet - Forecasting models</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Frontend</h5>
+                        <ul>
+                            <li>Bootstrap 5 - Responsive UI framework</li>
+                            <li>Plotly - Interactive visualizations</li>
+                            <li>Socket.IO - Real-time updates</li>
+                            <li>Flatpickr - Date range selection</li>
+                            <li>Font Awesome - Icons</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h4>Data Sources</h4>
+                <p>
+                    The dashboard can work with any CSV data that includes the following fields:
+                </p>
+                <ul>
+                    <li><code>date</code> - Date of the record</li>
+                    <li><code>product_id</code> - Unique product identifier</li>
+                    <li><code>product_name</code> - Name of the product</li>
+                    <li><code>category</code> - Product category</li>
+                    <li><code>price</code> - Product price</li>
+                    <li><code>stock_level</code> - Current inventory level</li>
+                    <li><code>quantity_sold</code> - Number of units sold</li>
+                    <li><code>reservations</code> - Number of reservations</li>
+                    <li><code>revenue</code> - Revenue generated</li>
+                </ul>
+                
+                <h4>Version</h4>
+                <p>1.0.0 - May 2025</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

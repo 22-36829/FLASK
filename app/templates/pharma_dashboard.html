@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Pharmaceutical Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Pharmaceutical Sales & Inventory Dashboard</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>This is a simplified version of the dashboard. For full functionality, please use the main dashboard.
+                </div>
+                <div class="text-center">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-line me-2"></i>Go to Main Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: flask-pharma-dashboard
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --worker-class eventlet -w 1 --bind "0.0.0.0:$PORT" 'app:application'
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flask-dashboard-db
+          property: connectionString
+    disk:
+      name: uploads
+      mountPath: /uploads
+      sizeGB: 1
+    autoDeploy: true
+
+  - type: postgres
+    name: flask-dashboard-db
+    ipAllowList: []
+    plan: free 

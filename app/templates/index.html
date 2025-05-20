@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Home - Pharma Analytics{% endblock %}
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">Welcome to Pharma Analytics Dashboard!</h1>
+    <p class="lead">A comprehensive analytics solution for pharmaceutical inventory management and sales forecasting.</p>
+    <hr class="my-4">
+    <p>View interactive visualizations, KPIs, and predictive analytics to make data-driven decisions.</p>
+    <div class="d-flex gap-3">
+        <a class="btn btn-primary btn-lg" href="{{ url_for('pharma_dashboard') }}" role="button">
+            <i class="fas fa-prescription-bottle-alt me-2"></i>Go to Pharma Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-chart-line text-primary me-2"></i>Descriptive Analytics</h5>
+                <p class="card-text">Visualize historical pharmaceutical sales data through interactive charts and graphs to understand trends and patterns.</p>
+                <ul class="list-unstyled mt-3">
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Total Sales Over Time</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Inventory Turnover per Product</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Top 10 Reserved Products</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Price Fluctuation Trends</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-brain text-primary me-2"></i>Predictive Analytics</h5>
+                <p class="card-text">Leverage machine learning models to forecast future pharmaceutical sales, inventory needs, and reservations.</p>
+                <ul class="list-unstyled mt-3">
+                    <li><i class="fas fa-check-circle text-success me-2"></i>ARIMA Sales Forecasting</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>XGBoost Inventory Depletion</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Prophet Reservation Forecasting</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Revenue Prediction</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-tachometer-alt text-primary me-2"></i>Key Performance Indicators</h5>
+                <p class="card-text">Monitor critical pharmaceutical business metrics to track performance and identify opportunities.</p>
+                <ul class="list-unstyled mt-3">
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Total Revenue</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Product Inventory Levels</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Low Stock Alerts</li>
+                    <li><i class="fas fa-check-circle text-success me-2"></i>Reservation Tracking</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Model Integration</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-bold">Machine Learning Models</h6>
+                <ul>
+                    <li><strong>Sales Forecasting:</strong> ARIMA time series per product</li>
+                    <li><strong>Inventory Depletion:</strong> XGBoost regression model</li>
+                    <li><strong>Reservation Forecasting:</strong> Prophet time series model</li>
+                    <li><strong>Revenue Forecasting:</strong> ARIMA time series per product</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-bold">Data Processing</h6>
+                <ul>
+                    <li>Upload new pharmaceutical data via CSV</li>
+                    <li>Automatic data validation and preprocessing</li>
+                    <li>Real-time model prediction updates</li>
+                    <li>Historical comparison and trend analysis</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
