@@ -1,11 +1,10 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from flask_bcrypt import Bcrypt
 import logging
+from . import bcrypt
 
 db = SQLAlchemy()
-bcrypt = Bcrypt()
 
 # Configure logging once
 logging.basicConfig(
@@ -27,9 +26,13 @@ class User(UserMixin, db.Model):
         return f'<User {self.email}>'
 
     def set_password(self, password):
+        """Hash password before storing"""
         self.password = bcrypt.generate_password_hash(password).decode('utf-8')
 
     def check_password(self, password):
+        """Check if provided password matches hash"""
+        if not self.password:
+            return False
         return bcrypt.check_password_hash(self.password, password)
 
     @property

@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, flash, redirect, url_for, jso
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_socketio import SocketIO, emit
+from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import pandas as pd
 import numpy as np
@@ -46,13 +47,14 @@ from .utils.model_evaluation import create_metrics_table
 from .utils.forecasting import (
     train_arima_model, train_xgboost_model, train_revenue_forecast
 )
-from .models import db, bcrypt, UploadedFile, ProductForecast, InventoryPrediction, ModelMetric
+from .models import db, UploadedFile, ProductForecast, InventoryPrediction, ModelMetric
 from flask_login import LoginManager, login_required, current_user
 from sqlalchemy import text
 
 migrate = Migrate()
 socketio = SocketIO()
 login_manager = LoginManager()
+bcrypt = Bcrypt()
 
 def create_app(test_config=None):
     # create and configure the app
@@ -82,17 +84,28 @@ def create_app(test_config=None):
     # ensure upload folder exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    # Initialize extensions
+    # Initialize extensions in the correct order
+    bcrypt.init_app(app)  # Initialize Bcrypt first
     db.init_app(app)
-    bcrypt.init_app(app)
     csrf = CSRFProtect(app)
     migrate.init_app(app, db)
-    socketio.init_app(app)
     
     # Initialize Flask-Login
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
+    
+    # Initialize SocketIO last
+    socketio.init_app(app, 
+        message_queue=None,
+        cors_allowed_origins="*",
+        async_mode='eventlet',
+        logger=True,
+        engineio_logger=True,
+        ping_timeout=60,
+        ping_interval=25,
+        manage_session=False
+    )
     
     @login_manager.user_loader
     def load_user(id):
