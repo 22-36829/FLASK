@@ -68,8 +68,8 @@ else:
                     pass
         return middleware
 
-    # Create the proper WSGI application with SocketIO
-    application = socketio.wsgi_app
-    
-    # Wrap the application with the cleanup middleware
+    # The Flask app is our WSGI application
+    application = app
+
+    # Wrap it with the cleanup middleware
     application = cleanup_db_session(application) 
