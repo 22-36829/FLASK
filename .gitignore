@@ -29,42 +29,70 @@ env/
 instance/
 .webassets-cache
 app.log
+flask_session/
 
 # Database
 *.db
 *.sqlite3
+*.sqlite
 
 # Environment variables
 .env
 .env.*
+.flaskenv
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*.swn
+.vscode/
+*.sublime-workspace
+*.sublime-project
 
 # Logs
 logs/
 *.log
-
-# Temporary files
-temp/
+log/
 tmp/
+temp/
 
 # Uploaded files
 uploads/
+media/
+static/uploads/
 
 # Model files
 *.pkl
 *.h5
 *.model
+*.joblib
+*.save
+models/saved/
 
 # Dataset
 *.csv
 *.xlsx
 *.xls
+*.json
+*.parquet
+*.feather
 
 # System Files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+*.bak
+*.tmp
+*~
+
+# Project specific
+app.log
+instance/
+migrations/versions/
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/ 
