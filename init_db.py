@@ -1,10 +1,8 @@
 from app import create_app, db
 from app.models import User
-from flask_bcrypt import Bcrypt
 
 def init_db():
     app = create_app()
-    bcrypt = Bcrypt(app)
     
     with app.app_context():
         # Create all tables
@@ -13,13 +11,12 @@ def init_db():
         # Check if admin user exists
         admin_user = User.query.filter_by(email='test@sample.com').first()
         if not admin_user:
-            # Create admin user with bcrypt hashed password
-            hashed_password = bcrypt.generate_password_hash('test123!').decode('utf-8')
+            # Create admin user with hashed password
             admin_user = User(
                 email='test@sample.com',
-                password=hashed_password,
                 is_admin=True
             )
+            admin_user.set_password('test123!')
             db.session.add(admin_user)
             db.session.commit()
             print("Admin user created successfully!")

@@ -46,7 +46,7 @@ from .utils.model_evaluation import create_metrics_table
 from .utils.forecasting import (
     train_arima_model, train_xgboost_model, train_revenue_forecast
 )
-from .models import db, UploadedFile, ProductForecast, InventoryPrediction, ModelMetric
+from .models import db, bcrypt, UploadedFile, ProductForecast, InventoryPrediction, ModelMetric
 from flask_login import LoginManager, login_required, current_user
 from sqlalchemy import text
 
@@ -84,6 +84,7 @@ def create_app(test_config=None):
 
     # Initialize extensions
     db.init_app(app)
+    bcrypt.init_app(app)
     csrf = CSRFProtect(app)
     migrate.init_app(app, db)
     socketio.init_app(app)
