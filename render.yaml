@@ -8,7 +8,7 @@ services:
       chmod 777 logs
       python init_db.py
       flask db upgrade
-    startCommand: gunicorn --worker-class eventlet -w 1 --timeout 300 --keep-alive 120 --log-level debug --worker-connections 1000 --backlog 2048 --access-logfile - --error-logfile - --capture-output --enable-stdio-inheritance --bind 0.0.0.0:$PORT "wsgi:application"
+    startCommand: gunicorn --worker-class eventlet -w 1 --timeout 300 --keep-alive 120 --log-level debug --worker-connections 1000 --backlog 2048 --access-logfile - --error-logfile - --capture-output --enable-stdio-inheritance --max-requests 1000 --max-requests-jitter 50 --graceful-timeout 30 --bind 0.0.0.0:$PORT "wsgi:application"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -23,13 +23,13 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: SQLALCHEMY_POOL_SIZE
-        value: "20"
-      - key: SQLALCHEMY_MAX_OVERFLOW
         value: "10"
+      - key: SQLALCHEMY_MAX_OVERFLOW
+        value: "5"
       - key: SQLALCHEMY_POOL_TIMEOUT
         value: "30"
       - key: SQLALCHEMY_POOL_RECYCLE
-        value: "60"
+        value: "1800"
       - key: GUNICORN_TIMEOUT
         value: "300"
       - key: GUNICORN_KEEP_ALIVE
@@ -81,4 +81,10 @@ services:
     postgresMajorVersion: "15"
     disk:
       name: data
-      sizeGB: 10 
+      sizeGB: 10
+    settings:
+      statement_timeout: 60000
+      idle_in_transaction_session_timeout: 30000
+      tcp_keepalives_idle: 300
+      tcp_keepalives_interval: 10
+      tcp_keepalives_count: 9 

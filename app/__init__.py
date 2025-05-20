@@ -127,7 +127,7 @@ def create_app(test_config=None):
         SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=os.path.join(os.path.dirname(app.instance_path), 'uploads'),
-        MODELS_FOLDER=os.path.join(os.path.dirname(app.instance_path), 'FLASK MODELS', 'saved_models'),
+        MODELS_FOLDER=os.path.join(os.path.dirname(app.instance_path), 'flask_models', 'saved_models'),
         MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
         SQLALCHEMY_ENGINE_OPTIONS={
             'pool_size': int(os.environ.get('SQLALCHEMY_POOL_SIZE', 20)),
@@ -137,7 +137,7 @@ def create_app(test_config=None):
             'pool_pre_ping': True,
             'pool_use_lifo': True,
             'connect_args': {
-                'connect_timeout': 10,
+                'options': '-c statement_timeout=60000',  # 60 seconds
                 'application_name': 'flask_dashboard'
             }
         }
@@ -224,6 +224,22 @@ def create_app(test_config=None):
     # Register blueprints
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint)
+
+    # Health check endpoint
+    @app.route('/health/db')
+    def health_check():
+        try:
+            # Try to query the database
+            with app.app_context():
+                db.session.execute(text('SELECT 1'))
+                return jsonify({'status': 'healthy', 'database': 'connected'}), 200
+        except Exception as e:
+            app.logger.error(f"Health check failed: {str(e)}")
+            return jsonify({
+                'status': 'unhealthy',
+                'database': 'disconnected',
+                'error': str(e)
+            }), 503
 
     # Register routes
     @app.route('/')
