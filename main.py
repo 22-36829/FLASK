@@ -1,12 +1,16 @@
+import eventlet
+eventlet.monkey_patch()  # This must be the first import
+
 import os
 from app import create_app
 from flask_socketio import SocketIO
 
 # Create the Flask application instance
 app = create_app()
+app.app_context().push()  # Push an application context
 
 # Initialize SocketIO with the correct configuration for production
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*", logger=True, engineio_logger=True)
 
 if __name__ == '__main__':
     # Development server
@@ -18,6 +22,4 @@ if __name__ == '__main__':
 else:
     # This is for Gunicorn/production
     port = int(os.environ.get('PORT', 10000))
-    application = app  # For WSGI servers
-    # Make socketio instance available for gunicorn
-    # The socketio instance is what Gunicorn needs to serve 
+    application = socketio.middleware(app)  # Use socketio middleware 
