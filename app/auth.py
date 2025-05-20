@@ -15,25 +15,26 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         try:
-            user = User.query.filter_by(email=form.email.data).first()
-            if user is None:
-                logging.warning(f"Login attempt failed: User not found - {form.email.data}")
-                flash('Invalid email or password', 'danger')
-                return redirect(url_for('auth.login'))
-            
-            bcrypt = current_app.extensions['bcrypt']
-            if not user.check_password(form.password.data, bcrypt):
-                logging.warning(f"Login attempt failed: Invalid password for user - {form.email.data}")
-                flash('Invalid email or password', 'danger')
-                return redirect(url_for('auth.login'))
-            
-            login_user(user)
-            logging.info(f"User logged in successfully: {user.email}")
-            
-            next_page = request.args.get('next')
-            if not next_page or urlparse(next_page).netloc != '':
-                next_page = url_for('dashboard')
-            return redirect(next_page)
+            with current_app.app_context():
+                user = User.query.filter_by(email=form.email.data).first()
+                if user is None:
+                    logging.warning(f"Login attempt failed: User not found - {form.email.data}")
+                    flash('Invalid email or password', 'danger')
+                    return redirect(url_for('auth.login'))
+                
+                bcrypt = current_app.extensions['bcrypt']
+                if not user.check_password(form.password.data, bcrypt):
+                    logging.warning(f"Login attempt failed: Invalid password for user - {form.email.data}")
+                    flash('Invalid email or password', 'danger')
+                    return redirect(url_for('auth.login'))
+                
+                login_user(user)
+                logging.info(f"User logged in successfully: {user.email}")
+                
+                next_page = request.args.get('next')
+                if not next_page or urlparse(next_page).netloc != '':
+                    next_page = url_for('dashboard')
+                return redirect(next_page)
             
         except Exception as e:
             logging.error(f"Login error: {str(e)}")
@@ -41,7 +42,7 @@ def login():
             flash('An error occurred during login. Please try again.', 'danger')
             return redirect(url_for('auth.login'))
     
-    return render_template('login.html', form=form)
+    return render_template('auth/login.html', form=form)
 
 @auth.route('/logout')
 @login_required

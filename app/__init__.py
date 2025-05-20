@@ -49,7 +49,7 @@ from .utils.model_evaluation import create_metrics_table
 from .utils.forecasting import (
     train_arima_model, train_xgboost_model, train_revenue_forecast
 )
-from .models import db, UploadedFile, ProductForecast, InventoryPrediction, ModelMetric
+from .models import db, User, UploadedFile, ProductForecast, InventoryPrediction, ModelMetric
 from flask_login import LoginManager, login_required, current_user
 from sqlalchemy import text
 from .database import init_db, session_scope, retry_on_deadlock
@@ -167,7 +167,7 @@ def create_app(test_config=None):
 
     # Initialize extensions in the correct order
     bcrypt.init_app(app)  # Initialize Bcrypt first
-    init_db(app)  # Initialize database with enhanced handling
+    db.init_app(app)  # Initialize SQLAlchemy
     csrf = CSRFProtect(app)
     migrate.init_app(app, db)
     
@@ -175,6 +175,10 @@ def create_app(test_config=None):
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
+    
+    @login_manager.user_loader
+    def load_user(id):
+        return User.query.get(int(id))
     
     # Initialize SocketIO last
     socketio.init_app(app, 
@@ -185,11 +189,6 @@ def create_app(test_config=None):
         ping_interval=25,
         manage_session=False
     )
-    
-    @login_manager.user_loader
-    def load_user(id):
-        from .models import User
-        return User.query.get(int(id))
 
     # Register filters
     app.jinja_env.filters['format_number'] = format_number
