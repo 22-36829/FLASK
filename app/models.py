@@ -2,7 +2,6 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 import logging
-from . import bcrypt
 
 db = SQLAlchemy()
 
@@ -25,11 +24,11 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.email}>'
 
-    def set_password(self, password):
+    def set_password(self, password, bcrypt):
         """Hash password before storing"""
         self.password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    def check_password(self, password):
+    def check_password(self, password, bcrypt):
         """Check if provided password matches hash"""
         if not self.password:
             return False

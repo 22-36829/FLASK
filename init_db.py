@@ -17,7 +17,8 @@ def init_db():
                 email='test@sample.com',
                 is_admin=True
             )
-            admin_user.set_password('test123!')
+            bcrypt = app.extensions['bcrypt']
+            admin_user.set_password('test123!', bcrypt)
             db.session.add(admin_user)
             try:
                 db.session.commit()

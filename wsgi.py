@@ -19,8 +19,14 @@ import eventlet.debug
 eventlet.debug.hub_prevent_multiple_readers(False)
 eventlet.debug.hub_exceptions(True)
 
-# Now we can safely import the rest
-from main import app, socketio
+# Import Flask app and create application instance
+from app import create_app, socketio
 
-# The application is already wrapped by SocketIO
-application = app 
+# Create the application instance
+app = create_app()
+
+# The application is already wrapped by SocketIO in create_app()
+application = app
+
+if __name__ == '__main__':
+    socketio.run(app) 

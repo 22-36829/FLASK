@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from urllib.parse import urlparse
 from .models import User, db
@@ -21,7 +21,8 @@ def login():
                 flash('Invalid email or password', 'danger')
                 return redirect(url_for('auth.login'))
             
-            if not user.check_password(form.password.data):
+            bcrypt = current_app.extensions['bcrypt']
+            if not user.check_password(form.password.data, bcrypt):
                 logging.warning(f"Login attempt failed: Invalid password for user - {form.email.data}")
                 flash('Invalid email or password', 'danger')
                 return redirect(url_for('auth.login'))

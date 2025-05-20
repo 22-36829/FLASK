@@ -4,8 +4,9 @@ services:
     env: python
     buildCommand: |
       pip install -r requirements.txt
+      python init_db.py
       flask db upgrade
-    startCommand: gunicorn --worker-class eventlet -w 1 --timeout 300 --keep-alive 120 --log-level debug --worker-connections 1000 --backlog 2048 --bind 0.0.0.0:$PORT "wsgi:application"
+    startCommand: gunicorn --worker-class eventlet -w 1 --timeout 300 --keep-alive 120 --log-level debug --worker-connections 1000 --backlog 2048 --access-logfile - --error-logfile - --capture-output --enable-stdio-inheritance --bind 0.0.0.0:$PORT "wsgi:application"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -43,19 +44,39 @@ services:
         value: "60"
       - key: SOCKETIO_PING_INTERVAL
         value: "25"
+      - key: LOG_LEVEL
+        value: "INFO"
+      - key: LOG_FORMAT
+        value: "%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] - %(message)s"
       - key: DATABASE_URL
         fromDatabase:
           name: flask-dashboard-db
           property: connectionString
+      - key: PYTHONPATH
+        value: /opt/render/project/src
     disk:
       name: uploads
       mountPath: /uploads
       sizeGB: 1
-    healthCheckPath: /about
+    healthCheckPath: /health/db
+    healthCheckTimeout: 5
     autoDeploy: true
+    metrics:
+      - type: cpu
+        threshold: 80
+        duration: 5m
+      - type: memory
+        threshold: 90
+        duration: 5m
+      - type: http_response_time
+        threshold: 2000
+        duration: 5m
 
   - type: postgres
     name: flask-dashboard-db
     ipAllowList: []
-    plan: free
-    postgresMajorVersion: 15 
+    plan: standard
+    postgresMajorVersion: "15"
+    disk:
+      name: data
+      sizeGB: 10 

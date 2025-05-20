@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, flash, redirect, url_for, jsonify, send_from_directory
+from flask import Flask, render_template, request, flash, redirect, url_for, jsonify, send_from_directory, g
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from flask_socketio import SocketIO, emit
@@ -16,6 +16,8 @@ import warnings
 from sklearn.preprocessing import StandardScaler
 from prophet import Prophet
 import logging
+from logging.handlers import RotatingFileHandler
+import uuid
 from .utils.filters import format_number
 from .utils.visualizations import (
     load_data, filter_data, total_sales_over_time, inventory_turnover_per_product,
@@ -50,11 +52,48 @@ from .utils.forecasting import (
 from .models import db, UploadedFile, ProductForecast, InventoryPrediction, ModelMetric
 from flask_login import LoginManager, login_required, current_user
 from sqlalchemy import text
+from .database import init_db, session_scope, retry_on_deadlock
 
 migrate = Migrate()
 socketio = SocketIO()
 login_manager = LoginManager()
 bcrypt = Bcrypt()
+
+def setup_logging(app):
+    """Configure application logging"""
+    # Create logs directory if it doesn't exist
+    if not os.path.exists('logs'):
+        os.makedirs('logs')
+
+    # Set up rotating file handler
+    file_handler = RotatingFileHandler(
+        'logs/app.log',
+        maxBytes=1024 * 1024,  # 1MB
+        backupCount=10
+    )
+    
+    # Set formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] - %(message)s'
+    )
+    file_handler.setFormatter(formatter)
+    
+    # Set up console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO if app.config['ENV'] == 'production' else logging.DEBUG)
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
+    
+    # Configure werkzeug logger
+    logging.getLogger('werkzeug').setLevel(logging.INFO)
+    
+    # Configure socketio logger
+    logging.getLogger('socketio').setLevel(logging.INFO)
+    logging.getLogger('engineio').setLevel(logging.INFO)
 
 def create_app(test_config=None):
     # create and configure the app
@@ -66,7 +105,19 @@ def create_app(test_config=None):
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=os.path.join(os.path.dirname(app.instance_path), 'uploads'),
         MODELS_FOLDER=os.path.join(os.path.dirname(app.instance_path), 'FLASK MODELS', 'saved_models'),
-        MAX_CONTENT_LENGTH=16 * 1024 * 1024  # 16MB max file size
+        MAX_CONTENT_LENGTH=16 * 1024 * 1024,  # 16MB max file size
+        SQLALCHEMY_ENGINE_OPTIONS={
+            'pool_size': int(os.environ.get('SQLALCHEMY_POOL_SIZE', 20)),
+            'max_overflow': int(os.environ.get('SQLALCHEMY_MAX_OVERFLOW', 10)),
+            'pool_timeout': int(os.environ.get('SQLALCHEMY_POOL_TIMEOUT', 30)),
+            'pool_recycle': int(os.environ.get('SQLALCHEMY_POOL_RECYCLE', 60)),
+            'pool_pre_ping': True,
+            'pool_use_lifo': True,
+            'connect_args': {
+                'connect_timeout': 10,
+                'application_name': 'flask_dashboard'
+            }
+        }
     )
 
     # Configure database URL
@@ -84,6 +135,27 @@ def create_app(test_config=None):
         # load the test config if passed in
         app.config.from_mapping(test_config)
 
+    # Set up logging
+    setup_logging(app)
+
+    # Request ID middleware
+    @app.before_request
+    def before_request():
+        g.request_id = str(uuid.uuid4())
+        # Add request ID to logger
+        logging.LoggerAdapter(app.logger, {'request_id': g.request_id})
+
+    # Error handlers
+    @app.errorhandler(500)
+    def internal_error(error):
+        app.logger.error(f'Server Error: {error}', extra={'request_id': g.request_id})
+        return render_template('errors/500.html'), 500
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        app.logger.info(f'Page not found: {request.url}', extra={'request_id': g.request_id})
+        return render_template('errors/404.html'), 404
+
     # ensure the instance folder exists
     try:
         os.makedirs(app.instance_path)
@@ -95,7 +167,7 @@ def create_app(test_config=None):
 
     # Initialize extensions in the correct order
     bcrypt.init_app(app)  # Initialize Bcrypt first
-    db.init_app(app)
+    init_db(app)  # Initialize database with enhanced handling
     csrf = CSRFProtect(app)
     migrate.init_app(app, db)
     
@@ -109,8 +181,6 @@ def create_app(test_config=None):
         message_queue=None,
         cors_allowed_origins="*",
         async_mode='eventlet',
-        logger=True,
-        engineio_logger=True,
         ping_timeout=60,
         ping_interval=25,
         manage_session=False
