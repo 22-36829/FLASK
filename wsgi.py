@@ -23,4 +23,4 @@ eventlet.debug.hub_exceptions(True)
 from main import app, socketio
 
 # Export the WSGI application
-application = socketio.middleware(app) 
+app = socketio.wsgi_app 
