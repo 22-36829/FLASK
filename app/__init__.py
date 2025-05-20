@@ -84,7 +84,7 @@ def setup_logging(app):
     
     # Configure root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO if app.config['ENV'] == 'production' else logging.DEBUG)
+    root_logger.setLevel(logging.INFO if os.environ.get('FLASK_ENV') == 'production' else logging.DEBUG)
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
     
