@@ -95,4 +95,22 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .coverage
-htmlcov/ 
+htmlcov/
+
+# Production specific
+.render/
+.vercel/
+.netlify/
+.heroku/
+*.pid
+*.sock
+gunicorn.log
+celerybeat-schedule
+celerybeat.pid
+supervisord.log
+supervisord.pid
+nginx.access.log
+nginx.error.log
+/static/
+.env.prod
+.env.staging 

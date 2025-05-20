@@ -62,18 +62,36 @@ bcrypt = Bcrypt()
 def setup_logging(app):
     """Configure application logging"""
     # Create logs directory if it doesn't exist
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
+    log_dir = os.path.join(os.getcwd(), 'logs')
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Ensure log directory is writable
+    try:
+        test_file = os.path.join(log_dir, 'test.log')
+        with open(test_file, 'w') as f:
+            f.write('test')
+        os.remove(test_file)
+    except Exception as e:
+        print(f"Warning: Log directory is not writable: {e}")
+        # Fallback to a directory we know is writable in production
+        log_dir = '/tmp'
 
     # Set up rotating file handler
     file_handler = RotatingFileHandler(
-        'logs/app.log',
+        os.path.join(log_dir, 'app.log'),
         maxBytes=1024 * 1024,  # 1MB
         backupCount=10
     )
     
+    # Custom formatter that handles missing request_id
+    class RequestFormatter(logging.Formatter):
+        def format(self, record):
+            if not hasattr(record, 'request_id'):
+                record.request_id = 'no-request-id'
+            return super().format(record)
+    
     # Set formatter
-    formatter = logging.Formatter(
+    formatter = RequestFormatter(
         '%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] - %(message)s'
     )
     file_handler.setFormatter(formatter)
@@ -85,6 +103,11 @@ def setup_logging(app):
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO if os.environ.get('FLASK_ENV') == 'production' else logging.DEBUG)
+    
+    # Remove any existing handlers to avoid duplicates
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
     
